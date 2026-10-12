@@ -1,0 +1,7 @@
+.git
+.venv
+.env
+outputs
+credentials.json
+__pycache__
+*.egg-info

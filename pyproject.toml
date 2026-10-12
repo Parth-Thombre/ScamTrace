@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scamtrace"
+version = "0.1.0"
+description = "Evidence-first website investigation for the TRM challenge"
+requires-python = ">=3.11"
+dependencies = [
+  "playwright==1.58.0",
+  "openai>=2.0,<3",
+  "pydantic>=2.0,<3",
+  "pycryptodome>=3.20,<4",
+  "Pillow>=11,<13",
+  "zxing-cpp>=2.3,<3",
+]
+
+[project.scripts]
+scamtrace = "scamtrace.cli:main"
+scamtrace-repair = "scamtrace.repair:main"
+
+[tool.setuptools.packages.find]
+include = ["scamtrace*"]

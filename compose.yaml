@@ -1,0 +1,59 @@
+services:
+  proxy:
+    build:
+      context: .
+      dockerfile: security/Dockerfile.proxy
+    networks: [browser_net, internet]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 256m
+    pids_limit: 128
+    restart: "no"
+  browser:
+    build:
+      context: .
+      dockerfile: security/Dockerfile.browser
+    networks: [browser_net]
+    depends_on: [proxy]
+    init: true
+    read_only: true
+    tmpfs: [/tmp:size=512m, /home/pwuser:size=64m]
+    shm_size: 1gb
+    mem_limit: 3g
+    pids_limit: 512
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+      - seccomp=./security/seccomp_profile.json
+    healthcheck:
+      test: [CMD, node, -e, "require('net').connect(3000,'127.0.0.1').on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+  scanner:
+    build: .
+    user: "${SCAMTRACE_UID:-10001}:${SCAMTRACE_GID:-10001}"
+    networks: [browser_net, internet]
+    depends_on:
+      browser:
+        condition: service_healthy
+    environment:
+      BROWSER_WS_ENDPOINT: ws://browser:3000/scamtrace
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4.1-mini}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.1-flash-lite}
+    volumes:
+      - ./outputs:/app/outputs
+    read_only: true
+    tmpfs: [/tmp:size=128m]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 1g
+    pids_limit: 128
+    command: [run, --targets, targets.txt, --output, outputs/run]
+networks:
+  browser_net:
+    internal: true
+  internet: {}
