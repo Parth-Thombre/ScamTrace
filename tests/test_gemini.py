@@ -7,7 +7,7 @@ import httpx
 from openai import AsyncOpenAI
 
 from scamtrace.judge import Judge
-from test_judge import observation
+from tests.test_judge import observation
 
 
 class GeminiTests(unittest.IsolatedAsyncioTestCase):
